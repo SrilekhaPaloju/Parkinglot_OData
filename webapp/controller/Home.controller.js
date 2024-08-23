@@ -180,8 +180,8 @@ sap.ui.define([
                 });
                 if (create) {
                     // Replace with your actual Twilio Account SID and Auth Token
-                    const accountSid = 'ACb224f5ef242a9b70012285792ef40e8a';
-                    const authToken = '825aa6f260cb55938c47a748ae6cdba0';
+                    const accountSid ='' ;
+                    const authToken = '';
                     var to = "+91" + sPhoneNumber;
                     // Function to send SMS using Twili
                     debugger
