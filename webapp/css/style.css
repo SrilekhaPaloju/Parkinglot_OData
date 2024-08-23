@@ -1,0 +1,60 @@
+/* Enter your custom styles here */
+/* CSS class for the box container */
+.boxContainer {
+    border: 1px solid #ccc; /* Light gray border */
+    border-radius: 10px; /* Rounded corners */
+    padding-left: 2rem; /* Inner spacing */
+    padding-right: 2rem; 
+    padding-bottom: 1rem;
+    padding-top:1rem;
+    margin-left: 30%;
+    margin-top:10%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow */
+    background-color: #f9f9f9; /* Light background color */
+}
+
+/* Additional margin for spacing */
+.sapUiSmallMarginTop {
+    margin-top: 16px;
+    
+}
+
+.centerContainer {
+    justify-content: center !important;
+    align-items: center !important;
+    height: 100vh !important; /* Full viewport height */
+}
+
+.title {
+    background-color: #09c8f5 !important;
+    background-image: linear-gradient(to bottom, #09c8f5, #ffffff) !important;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+    
+}
+.customPopoverContent {
+    width: 600px;
+    height: 200px;
+    overflow: auto; /* Optional: Add this to handle overflow content */
+   
+}
+.body {
+    background-color: #ffecd2 !important; /* Soft peach */
+    background-image: linear-gradient(to bottom, #ffecd2, #fcb69f) !important; /* Gradient to a vibrant orange */
+    color: #333333 !important; /* Dark text for contrast */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important; /* Subtle shadow effect */
+}
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+    }
+ 
+    to {
+        transform: translateY(0);
+    }
+}
+.dialogSlideDown {
+    animation: slideDown 0.5s forwards;
+}
+.bold{
+    font-weight: bold;
+}
