@@ -23,19 +23,20 @@ sap.ui.define([
             },
             statusColorFormatter: function (sStatus) {
                 switch (sStatus) {
-                  case "Occupied":
-                    return "Error"; // Red
-                  case "Available":
-                    return "Success"; // Green
-                  case "Reserved":
-                    return "Warning"; // Orange
-                  default:
-                    return "None"; // Default color
+                    case "Occupied":
+                        return "Error"; // Red
+                    case "Available":
+                        return "Success"; // Green
+                    case "Reserved":
+                        return "Warning"; // Orange
+                    default:
+                        return "None"; // Default color
                 }
-              },
+            },
             onSelectItem: function (oEvent) {
                 var oItem = oEvent.getParameter("item").getKey();
                 var navContainer = this.getView().byId("pageContainer");
+                var oModel = this.getView().getModel();
 
                 switch (oItem) {
                     case "AllSlots":
@@ -51,11 +52,10 @@ sap.ui.define([
                         navContainer.to(this.getView().createId("Page4"));
                         break;
                     case "DataVisualization":
+                        this._setParkingLotModel();
                         navContainer.to(this.getView().createId("Page5"));
                         break;
                     case "Reservations":
-                        var oModel = this.getView().getModel();
-                        oModel.setUseBatch(false);
                         oModel.refresh(true);
                         navContainer.to(this.getView().createId("Page6"));
                         break;
@@ -180,13 +180,13 @@ sap.ui.define([
                 });
                 if (create) {
                     // Replace with your actual Twilio Account SID and Auth Token
-                    const accountSid ='' ;
-                    const authToken = '';
+                    const accountSid = 'ACc087461333853e771f27f1589f7eb162';
+                    const authToken = 'c9e5698df800c9be421faf6d2e684042';
                     var to = "+91" + sPhoneNumber;
                     // Function to send SMS using Twili
                     debugger
                     const toNumber = to; // Replace with recipient's phone number
-                    const fromNumber = '+18149043908'; // Replace with your Twilio phone number
+                    const fromNumber = '+13203173039'; // Replace with your Twilio phone number
                     const messageBody = 'Hello ' + sDriverName + ',\n' +
                         'Your vehicle (' + sVehicleNumber + ') has been assigned to parking lot ' + sParkingLotNumber + '.\n' +
                         'Please park your vehicle in the assigned slot.\n' +
@@ -321,15 +321,15 @@ sap.ui.define([
                         var aChartData = {
                             Items: [
                                 {
-                                    Status: "Available",
+                                    Status: `Available-${availableCount}`,
                                     Count: availableCount
                                 },
                                 {
-                                    Status: "Occupied",
+                                    Status: `Occupied-${occupiedCount}`,
                                     Count: occupiedCount
                                 },
                                 {
-                                    Status: "Reserved",
+                                    Status: `Reserved-${reserveCount}`,
                                     Count: reserveCount
                                 }
                             ]
@@ -728,41 +728,97 @@ sap.ui.define([
                     return v.toString(16);
                 });
             },
+            // onRejectPress: async function () {
+            //     const oTable = this.byId("idReserveSlotsTable");
+            //     const aSelectedItems = oTable.getSelectedItems();
+
+            //     if (aSelectedItems.length === 0) {
+            //         sap.m.MessageToast.show("Please select at least one item to reject.");
+            //         return;
+            //     }
+
+            //     const oModel = this.getView().getModel();
+            //     const aPromises = [];
+
+            //     aSelectedItems.forEach(function (oItem) {
+            //         const sPath = oItem.getBindingContext().getPath();
+            //         aPromises.push(
+            //             new Promise((resolve, reject) => {
+            //                 oModel.remove(sPath, {
+            //                     success: resolve,
+            //                     error: function (oError) {
+            //                         sap.m.MessageBox.error("Failed to reject: " + oError.message);
+            //                         reject(oError);
+            //                     }
+            //                 });
+            //             })
+            //         );
+            //     });
+
+            //     try {
+            //         await Promise.all(aPromises);
+            //         sap.m.MessageToast.show("Selected items were successfully rejected.");
+            //         oModel.refresh(true); // Refresh the model to update the table
+            //     } catch (error) {
+            //         console.error("Error during rejection:", error);
+            //     }
+            // },
             onRejectPress: async function () {
                 const oTable = this.byId("idReserveSlotsTable");
                 const aSelectedItems = oTable.getSelectedItems();
-
+            
                 if (aSelectedItems.length === 0) {
                     sap.m.MessageToast.show("Please select at least one item to reject.");
                     return;
                 }
-
+            
                 const oModel = this.getView().getModel();
-                const aPromises = [];
-
+                const aUpdatePromises = [];
+                const aDeletePromises = [];
+            
                 aSelectedItems.forEach(function (oItem) {
                     const sPath = oItem.getBindingContext().getPath();
-                    aPromises.push(
+                    const oData = oModel.getProperty(sPath);
+            
+                    // Update status to "available" if it is "reserved"
+                    if (oData.status === "reserved") {
+                        oData.status = "available";
+            
+                        aUpdatePromises.push(
+                            new Promise((resolve, reject) => {
+                                oModel.update(sPath, oData, {
+                                    success: resolve,
+                                    error: function (oError) {
+                                        sap.m.MessageBox.error("Failed to update status: " + oError.message);
+                                        reject(oError);
+                                    }
+                                });
+                            })
+                        );
+                    }
+            
+                    // Add a delete promise to remove the item regardless of its status
+                    aDeletePromises.push(
                         new Promise((resolve, reject) => {
                             oModel.remove(sPath, {
                                 success: resolve,
                                 error: function (oError) {
-                                    sap.m.MessageBox.error("Failed to reject: " + oError.message);
+                                    sap.m.MessageBox.error("Failed to delete item: " + oError.message);
                                     reject(oError);
                                 }
                             });
                         })
                     );
                 });
-
+            
                 try {
-                    await Promise.all(aPromises);
-                    sap.m.MessageToast.show("Selected items were successfully rejected.");
+                    await Promise.all([...aUpdatePromises, ...aDeletePromises]);
+                    sap.m.MessageToast.show("Selected items were successfully updated and removed.");
                     oModel.refresh(true); // Refresh the model to update the table
                 } catch (error) {
-                    console.error("Error during rejection:", error);
+                    console.error("Error during update or delete:", error);
                 }
-            },
+            },                       
             onNotificationPress: function (oEvent) {
                 var oButton = oEvent.getSource(),
                     oView = this.getView();
@@ -777,21 +833,7 @@ sap.ui.define([
                 }
                 this._pPopover.then(function (oPopover) {
                     oPopover.openBy(oButton);
-                    this.refreshNotificationList();
                 });
-            },
-            refreshNotificationList: function() {
-                var oModel = this.getView().getModel(); // Adjust to get your model
-                var oNotificationList = this.byId("Notification1");
-            
-                // Refresh the model data
-                oModel.refresh(); // Refresh the entire model
-            
-                // Alternatively, if you need to refresh a specific binding:
-                var oBinding = oNotificationList.getBinding("items");
-                if (oBinding) {
-                    oBinding.refresh(); // Refresh specific binding
-                }
             },
             _updateNotificationCount: function () {
                 var oModel = this.getView().getModel();
@@ -976,9 +1018,9 @@ sap.ui.define([
                 let month = String(currentDate.getMonth() + 1).padStart(2, '0');
                 let day = String(currentDate.getDate()).padStart(2, '0');
                 const currentDay = `${year}-${month}-${day}`;
- 
+
                 const oModel = this.getView().getModel();
- 
+
                 if (!oModel) {
                     // MessageToast.show("Model is not defined");
                     console.log("error")
@@ -987,25 +1029,184 @@ sap.ui.define([
                 oModel.read("/ZRESERVESet", {
                     success: function (oData, resp) {
                         if (oData.results.length > 0) {
+                            MessageBox.information("Hey you have reservations today")
                             oData.results.forEach((element) => {
                                 var oReservedDate = element.ReserveTime
                                 if (oReservedDate === currentDay) {
                                     var oReservedSlot = element.ParkinglotNumber
-                                    const ofilter = new Filter("ParkinglotNumber", FilterOperator.EQ, oReservedSlot)
-                                    oModel.update(`/zparkinglot1Set('${oReservedSlot}')`, { Status: "Reserved" }, {
-                                        success: function () {
+                                    oModel.read(`/zparkinglot1Set('${oReservedSlot}')`, {
+                                        success: function (oSlotData) {
+                                            if (oSlotData.Status === "Available") {
+                                                // Update the status to "Reserved"
+                                                oModel.update(`/zparkinglot1Set('${oReservedSlot}')`, { Status: "Reserved" }, {
+                                                    success: function () {
+                                                        console.log(`Parking slot ${oReservedSlot} updated to Reserved`);
+                                                    },
+                                                    error: function (oError) {
+                                                        console.error("Failed to update parking slot status:", oError);
+                                                    }
+                                                });
+                                            }
                                         },
-                                        error: function () {
+                                        error: function (oError) {
+                                            console.error("Failed to read parking slot status:", oError);
                                         }
-                                    })
+                                    });
                                 }
-                            })
+                            });
                         } else {
+                            MessageBox.information("No Reservations found today")
                         }
                     },
                     error: function () {
                     }
                 })
             },
+            onScanErrorOne: function (oEvent) {
+                // Handle the scan error
+                var sErrorMessage = oEvent.getParameter("message");
+
+                // Optionally, display a message toast to show the error
+                sap.m.MessageToast.show("Scan failed: " + sErrorMessage);
+            },
+
+            onScanLiveUpdate: function (oEvent) {
+                // This function can be used if you want to handle live updates during scanning
+                var sLiveValue = oEvent.getParameter("value");
+
+                // For now, you might not need this, but you can log the live value
+                console.log("Live scan value: " + sLiveValue);
+            },
+            onScanSuccessOne: async function (oEvent) {
+                debugger;
+                if (oEvent.getParameter("cancelled")) {
+                    MessageToast.show("Scan cancelled", { duration: 1000 });
+                } else {
+                    var VehicleNumber = oEvent.getParameter("text");
+                    var sVehicleNumber = VehicleNumber.split(':').pop().trim();
+                    var sUUID = this.generateUUID();
+                    var FinalDate = new Date();
+            
+                    // Format the date and time to YYYY-MM-DD HH:MM:SS
+                    var formattedDate = this.formatDate(FinalDate);
+
+                    if (sVehicleNumber) {
+                        var oModel = this.getView().getModel();
+                        var oThis = this;
+
+                        try {
+                            // Step 1: Fetch all allocated slots
+                            const allocatedSlotsData = await new Promise((resolve, reject) => {
+                                oModel.read("/ZASSIGNEDSet", {
+                                    success: function (oData) {
+                                        resolve(oData.results);
+                                    },
+                                    error: function (oError) {
+                                        reject(oError);
+                                    }
+                                });
+                            });
+
+                            // Step 2: Find the particular slot details by vehicle number
+                            var allocatedSlotData = allocatedSlotsData.find(slot => slot.VehicleNumber === sVehicleNumber);
+
+                            if (allocatedSlotData) {
+                                // Step 3: Confirm unassign action
+                                MessageBox.warning(
+                                    `Are you sure you want to unassign Slot '${allocatedSlotData.ParkinglotNumber}' for the Vehicle Number '${sVehicleNumber}'?`,
+                                    {
+                                        actions: [MessageBox.Action.YES, MessageBox.Action.NO],
+                                        onClose: async function (sAction) {
+                                            if (sAction === MessageBox.Action.YES) {
+                                                try {
+                                                    // Step 4: Add entry to the History table
+                                                    const oHistoryPayload = {
+                                                        Id: sUUID,
+                                                        ParkinglotNumber: allocatedSlotData.ParkinglotNumber,
+                                                        TransportType: allocatedSlotData.TransportType,
+                                                        VehicleNumber: allocatedSlotData.VehicleNumber,
+                                                        Drivername: allocatedSlotData.Drivername,
+                                                        Phonenumber: allocatedSlotData.Phonenumber,
+                                                        Intime: allocatedSlotData.Intime,
+                                                        Outtime: formattedDate
+                                                    };
+                                                    await new Promise((resolve, reject) => {
+                                                        oModel.create("/ZHISTORYSet", oHistoryPayload, {
+                                                            success: resolve,
+                                                            error: reject
+                                                        });
+                                                    });
+
+                                                    // Step 5: Update the slot status in AllSlots to 'Available'
+                                                    const sAllSlotsPath = `/zparkinglot1Set?$filter=ParkinglotNumber eq '${allocatedSlotData.ParkinglotNumber}'`;
+                                                    const allSlotsData = await new Promise((resolve, reject) => {
+                                                        oModel.read(sAllSlotsPath, {
+                                                            success: (oData) => resolve(oData.results),
+                                                            error: reject
+                                                        });
+                                                    });
+
+                                                    // Find the specific slot data based on the ParkinglotNumber
+                                                    const slotData = allSlotsData.find(slot => slot.ParkinglotNumber === allocatedSlotData.ParkinglotNumber);
+                                                    const sSlotNumberPath = `/zparkinglot1Set('${slotData.ParkinglotNumber}')`;
+
+                                                    // Prepare the updated slot object
+                                                    const updatedSlot = {
+                                                        ParkinglotNumber: slotData.ParkinglotNumber,
+                                                        Status: "Available",
+                                                        TransportType: slotData.TransportType // Keep existing TransportType
+                                                    };
+                                                    await new Promise((resolve, reject) => {
+                                                        oModel.update(sSlotNumberPath, updatedSlot, {
+                                                            success: resolve,
+                                                            error: reject
+                                                        });
+                                                    });
+                                                    // Step 6: Delete the Slot details in Allocated Slots table
+                                                    const sAllocatedSlotPath = `/ZASSIGNEDSet('${allocatedSlotData.Id}')`;
+                                                    await new Promise((resolve, reject) => {
+                                                        oModel.remove(sAllocatedSlotPath, {
+                                                            success: resolve,
+                                                            error: reject
+                                                        });
+                                                     oThis._setParkingLotModel();
+                                                        oModel.refresh(true);
+                                                    });
+                                                    MessageBox.success("Slot unassigned successfully");
+
+                                                } catch (error) {
+                                                    MessageBox.error("Failed to unassign slot or add to history.");
+                                                    console.error("Error: ", error);
+                                                }
+                                            }
+                                        }
+                                    }
+                                );
+                            } else {
+                                MessageBox.error("Allocated slot not found for the given vehicle number.");
+                            }
+                        } catch (error) {
+                            MessageBox.error("Error finding allocated slot: " + error.message);
+                        }
+                    }
+                }
+            },
+            formatDate: function(date) {
+                var year = date.getFullYear();
+                var month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+                var day = String(date.getDate()).padStart(2, '0');
+                var hours = String(date.getHours()).padStart(2, '0');
+                var minutes = String(date.getMinutes()).padStart(2, '0');
+                var seconds = String(date.getSeconds()).padStart(2, '0');
+            
+                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            },
+            onItemClose1: function (oEvent) {
+                var oItem = oEvent.getSource(),
+                  oList = oItem.getParent();
+          
+                oList.removeItem(oItem);
+                MessageToast.show("Item Closed: " + oItem.getTitle());
+              },
         });
     });

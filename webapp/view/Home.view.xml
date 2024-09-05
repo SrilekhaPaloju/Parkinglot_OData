@@ -14,6 +14,7 @@
     xmlns:suite="sap.suite.ui.commons"
     height="100%"
     displayBlock="true"
+    xmlns:ndc="sap.ndc"
 >
     <tnt:ToolPage
         id="toolPage"
@@ -32,7 +33,7 @@
                 >
                     <layoutData>
                         <OverflowToolbarLayoutData
-                            id="idNeverOverflow0"
+                            id="idNeverOverflowlayout"
                             priority="NeverOverflow"
                         />
                     </layoutData>
@@ -52,12 +53,20 @@
                 <ToolbarSpacer id="toolbarSpacer2">
                     <layoutData>
                         <OverflowToolbarLayoutData
-                            id="idNeverOverflow1"
+                            id="idNeverOverflowData"
                             priority="NeverOverflow"
                             minWidth="20px"
                         />
                     </layoutData>
                 </ToolbarSpacer>
+                <ndc:BarcodeScannerButton
+                    id="sampleBarcodeScannerButtonZebraOne"
+                    scanSuccess="onScanSuccessOne"
+                    scanFail="onScanErrorOne"
+                    inputLiveUpdate="onScanLiveUpdate"
+                    dialogTitle="Enter Assigned Vehicle Number"
+                    class="sampleBarcodeScannerButtonWithZebraEB"
+                />
                 <Button
                     id="idNotifications"
                     icon="sap-icon://bell"
@@ -79,13 +88,13 @@
                 /> -->
             </tnt:ToolHeader>
         </tnt:header>
-        <tnt:sideContent >
+        <tnt:sideContent>
             <tnt:SideNavigation
                 id="sideNavigation"
                 expanded="true"
                 itemSelect=".onSelectItem"
             >
-                <tnt:NavigationList id="navigationList" >
+                <tnt:NavigationList id="navigationList">
                     <tnt:NavigationListItem
                         id="navigationAllSlots"
                         icon="sap-icon://dimension"
@@ -161,7 +170,6 @@
                                         id="allSlotstableTitle"
                                         text="All slots"
                                         titleStyle="H3"
-                                        
                                     />
                                     <ToolbarSpacer id="toolbarspacer1" />
                                     <SearchField
@@ -191,7 +199,13 @@
                                 <!-- <Column id="allSlotscolumn2">
                         <Text id="allSlotscolumn2Text" text="Type" />
                     </Column> -->
-                                <Column id="allSlotscolumn3">
+                                   <Column id="allSlotscolumn4">
+                                    <Text
+                                        id="allSlotscolumn4Text"
+                                        text="Transport Type"
+                                    />
+                                     </Column>
+                                      <Column id="allSlotscolumn3">
                                     <Text
                                         id="allSlotscolumn3Text"
                                         text="Status"
@@ -199,25 +213,26 @@
                                 </Column>
                             </columns>
                             <items>
-                                <ColumnListItem
-                                    id="allSlotscolumnListItem"
-                                >
+                                <ColumnListItem id="allSlotscolumnListItem">
                                     <cells>
                                         <Text
                                             id="alllotscellText1"
                                             text="{ParkinglotNumber}"
+                                        />
+                                        <Text
+                                            id="alllotscellText2"
+                                            text="{TransportType}"
                                         />
                                         <!-- <Text
                                             id="allSlotscellText3"
                                             text="{Status}"
                                         /> -->
                                         <ObjectStatus
-                                                        id="IDGenText11"
-                                                        text="{Status}"
-                                                        class="bold"
-                                                        state="{path: 'Status', formatter: '.statusColorFormatter'}"
-                                                    />
-
+                                            id="IDGenText11"
+                                            text="{Status}"
+                                            class="bold"
+                                            state="{path: 'Status', formatter: '.statusColorFormatter'}"
+                                        />
                                     </cells>
                                 </ColumnListItem>
                             </items>
@@ -702,7 +717,6 @@
                             id="vbox"
                             fitContainer="true"
                             class="body"
-
                         >
                             <suite:ChartContainer id="chartContainer">
                                 <suite:content>
@@ -786,7 +800,7 @@
                             alternateRowColors="false"
                             items="{/ZRESERVESet}"
                         >
-                          <headerToolbar>
+                            <headerToolbar>
                                 <Toolbar
                                     id="idReserveSlotsToolbar"
                                     class="body"
@@ -796,19 +810,21 @@
                                         text="Reserved Slots"
                                         titleStyle="H3"
                                     />
-                                    <ToolbarSpacer id="idReserveSlotsToolbarSpacer" />
-                                         <Button
-                                id="idAssignButton"
-                                text="Assign"
-                                type="Accept"
-                                press="onAssignPress"
-                            />
-                            <Button
-                                id="idRejectButton"
-                                text="Reject"
-                                type="Reject"
-                                press="onRejectPress"
-                            />
+                                    <ToolbarSpacer
+                                        id="idReserveSlotsToolbarSpacer"
+                                    />
+                                    <Button
+                                        id="idAssignButton"
+                                        text="Assign"
+                                        type="Accept"
+                                        press="onAssignPress"
+                                    />
+                                    <Button
+                                        id="idRejectButton"
+                                        text="Reject"
+                                        type="Reject"
+                                        press="onRejectPress"
+                                    />
                                 </Toolbar>
                             </headerToolbar>
                             <columns>
